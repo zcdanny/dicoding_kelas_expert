@@ -1,45 +1,44 @@
 const AddedThread = require('../AddedThread');
 
-describe('AddedThread entity', () => {
-    it('should throw error when payload did not contain needed property', () => {
-        const payload = {
-            id: 'thread-sdlakdja',
-            user_id: 'user-123',
-        };
+describe('AddedThread entities', () => {
+  it('should throw error when payload not contain needed property', () => {
+    // Arrange
+    const payload = {
+      id: '123',
+      title: 'A thread',
+    };
 
-        expect(() => new AddedThread(payload)).toThrowError(
-            'ADDED_THREAD.NOT_CONTAIN_NEEDED_PROPERTY'
-        );
-    });
+    // Action & Assert
+    expect(() => new AddedThread(payload)).toThrowError('ADDED_THREAD.NOT_CONTAIN_NEEDED_PROPERTY');
+  });
 
-    it('should throw error when payload did not meet data type specification', () => {
-        // Arrange
-        const payload = {
-            id: 'thread-sdlakdja',
-            title: 'some title',
-            user_id: 123456,
-        };
+  it('should throw error when payload does not meet data type requirements', () => {
+    // Arrange
+    const payload = {
+      id: '123',
+      title: 'A thread',
+      owner: 123,
+    };
 
-        // Action and Assert
-        expect(() => new AddedThread(payload)).toThrowError(
-            'ADDED_THREAD.NOT_MEET_DATA_TYPE_SPECIFICATION'
-        );
-    });
+    // Action & Assert
+    expect(() => new AddedThread(payload)).toThrowError('ADDED_THREAD.NOT_MEET_DATA_TYPE_SPECIFICATION');
+  });
 
-    it('should create added thread object correctly', () => {
-        // Arrange
-        const payload = {
-            id: 'thread-sdlakdja',
-            title: 'some title',
-            user_id: 'user-213rkf',
-        };
+  it('should create AddedThread entities correctly', () => {
+    // Arrange
+    const payload = {
+      id: '123',
+      title: 'A thread',
+      owner: 'thread-owner',
+    };
 
-        // Action
-        const addedThread = new AddedThread(payload);
+    // Action
+    const addedThread = new AddedThread(payload);
 
-        // Assert
-        expect(addedThread.id).toEqual(payload.id);
-        expect(addedThread.title).toEqual(payload.title);
-        expect(addedThread.user_id).toEqual(payload.user_id);
-    });
+    // Assert
+    expect(addedThread).toBeInstanceOf(AddedThread);
+    expect(addedThread.id).toEqual(payload.id);
+    expect(addedThread.title).toEqual(payload.title);
+    expect(addedThread.owner).toEqual(payload.owner);
+  });
 });

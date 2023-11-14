@@ -1,40 +1,44 @@
 const AddedReply = require('../AddedReply');
 
-describe('a AddedReply entities', () => {
-    it('should throw error when payload did not contain needed property', () => {
-        const payload = {
-            id: 'reply-sam',
-            user_id: 'user-sam',
-        };
+describe('AddedReply entities', () => {
+  it('should throw error when payload not contain needed property', () => {
+    // Arrange
+    const payload = {
+      content: 'A reply',
+      owner: 'user-123',
+    };
 
-        expect(() => new AddedReply(payload)).toThrowError(
-            'ADDED_REPLY.NOT_CONTAIN_NEEDED_PROPERTY'
-        );
-    });
+    // Action & Assert
+    expect(() => new AddedReply(payload)).toThrowError('ADDED_REPLY.NOT_CONTAIN_NEEDED_PROPERTY');
+  });
 
-    it('should throw error when payload did not meet data type specification', () => {
-        const payload = {
-            id: 'reply-sam',
-            content: 123,
-            user_id: 'user-sam',
-        };
+  it('should throw error when payload does not meet data type requirements', () => {
+    // Arrange
+    const payload = {
+      id: 'reply-123',
+      content: 'A reply',
+      owner: 123,
+    };
 
-        expect(() => new AddedReply(payload)).toThrowError(
-            'ADDED_REPLY.NOT_MEET_DATA_TYPE_SPECIFICATION'
-        );
-    });
+    // Action & Assert
+    expect(() => new AddedReply(payload)).toThrowError('ADDED_REPLY.NOT_MEET_DATA_TYPE_SPECIFICATION');
+  });
 
-    it('should create new added reply object correctly', () => {
-        const payload = {
-            id: 'reply-sam',
-            content: 'i like running man',
-            user_id: 'user-sam',
-        };
+  it('should create AddedReply entities correctly', () => {
+    // Arrange
+    const payload = {
+      id: 'reply-123',
+      content: 'A reply',
+      owner: 'user-123',
+    };
 
-        const addedReply = new AddedReply(payload);
+    // Action
+    const addedReply = new AddedReply(payload);
 
-        expect(addedReply.id).toEqual(payload.id);
-        expect(addedReply.content).toEqual(payload.content);
-        expect(addedReply.user_id).toEqual(payload.user_id);
-    });
+    // Assert
+    expect(addedReply).toBeInstanceOf(AddedReply);
+    expect(addedReply.id).toEqual(payload.id);
+    expect(addedReply.content).toEqual(payload.content);
+    expect(addedReply.owner).toEqual(payload.owner);
+  });
 });

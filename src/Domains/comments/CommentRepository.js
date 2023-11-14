@@ -1,24 +1,24 @@
 /* eslint-disable no-unused-vars */
 class CommentRepository {
-    async addComment(_newComment) {
-        throw new Error('COMMENT_REPOSITORY.METHOD_NOT_IMPLEMENTED');
-    }
+  async addComment(userId, threadId, newComment) {
+    throw new Error('COMMENT_REPOSITORY.METHOD_NOT_IMPLEMENTED');
+  }
 
-    async checkAvailabilityComment(commentId) {
-        throw new Error('COMMENT_REPOSITORY.METHOD_NOT_IMPLEMENTED');
-    }
+  async getCommentsByThreadId(threadId) {
+    throw new Error('COMMENT_REPOSITORY.METHOD_NOT_IMPLEMENTED');
+  }
 
-    async verifyCommentOwner(commentId, userId) {
-        throw new Error('COMMENT_REPOSITORY.METHOD_NOT_IMPLEMENTED');
-    }
+  async deleteCommentById(id) {
+    throw new Error('COMMENT_REPOSITORY.METHOD_NOT_IMPLEMENTED');
+  }
 
-    async deleteComment(commentId) {
-        throw new Error('COMMENT_REPOSITORY.METHOD_NOT_IMPLEMENTED');
-    }
+  async checkCommentAvailability(commentId, threadId) {
+    throw new Error('COMMENT_REPOSITORY.METHOD_NOT_IMPLEMENTED');
+  }
 
-    async getComments(threadId) {
-        throw new Error('COMMENT_REPOSITORY.METHOD_NOT_IMPLEMENTED');
-    }
+  async verifyCommentOwner(id, owner) {
+    throw new Error('COMMENT_REPOSITORY.METHOD_NOT_IMPLEMENTED');
+  }
 }
 
 module.exports = CommentRepository;

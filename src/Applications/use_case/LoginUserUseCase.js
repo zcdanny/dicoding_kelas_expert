@@ -1,63 +1,42 @@
-const NewAuth = require('../../Domains/authentications/entities/NewAuth');
 const UserLogin = require('../../Domains/users/entities/UserLogin');
+const NewAuthentication = require('../../Domains/authentications/entities/NewAuth');
 
 class LoginUserUseCase {
-    constructor({
-        userRepository,
-        authenticationRepository,
-        authenticationTokenManager,
-        passwordHash,
-    }) {
-        this._userRepository = userRepository;
-        this._authenticationRepository = authenticationRepository;
-        this._authenticationTokenManager = authenticationTokenManager;
-        this._passwordHash = passwordHash;
-    }
+  constructor({
+    userRepository,
+    authenticationRepository,
+    authenticationTokenManager,
+    passwordHash,
+  }) {
+    this._userRepository = userRepository;
+    this._authenticationRepository = authenticationRepository;
+    this._authenticationTokenManager = authenticationTokenManager;
+    this._passwordHash = passwordHash;
+  }
 
-    async execute(useCasePayload) {
-        /** get the payload */
-        const { username, password } = new UserLogin(useCasePayload);
+  async execute(useCasePayload) {
+    const { username, password } = new UserLogin(useCasePayload);
 
-        /** get existing encrypted password */
-        const encryptedExistingPassword =
-            await this._userRepository.getPasswordByUsername(username);
+    const encryptedPassword = await this._userRepository.getPasswordByUsername(username);
 
-        /** compare password */
-        await this._passwordHash.comparePassword(
-            password,
-            encryptedExistingPassword
-        );
+    await this._passwordHash.comparePassword(password, encryptedPassword);
 
-        /** get the id */
-        const id = await this._userRepository.getIdByUsername(username);
+    const id = await this._userRepository.getIdByUsername(username);
 
-        /** generate access token */
-        const accessToken =
-            await this._authenticationTokenManager.createAccessToken({
-                username,
-                id,
-            });
+    const accessToken = await this._authenticationTokenManager
+      .createAccessToken({ username, id });
+    const refreshToken = await this._authenticationTokenManager
+      .createRefreshToken({ username, id });
 
-        /** generate refresh token */
-        const refreshToken =
-            await this._authenticationTokenManager.createRefreshToken({
-                username,
-                id,
-            });
+    const newAuthentication = new NewAuthentication({
+      accessToken,
+      refreshToken,
+    });
 
-        /** create New Auth */
-        const newAuthentication = new NewAuth({
-            accessToken,
-            refreshToken,
-        });
+    await this._authenticationRepository.addToken(newAuthentication.refreshToken);
 
-        /** save refresh token to database */
-        await this._authenticationRepository.addToken(
-            newAuthentication.refreshToken
-        );
-
-        return newAuthentication;
-    }
+    return newAuthentication;
+  }
 }
 
 module.exports = LoginUserUseCase;

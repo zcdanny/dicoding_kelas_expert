@@ -1,40 +1,44 @@
 const AddedComment = require('../AddedComment');
 
-describe('a AddedComment entities', () => {
-    it('should throw error when payload did not contain needed property', () => {
-        const payload = {
-            id: 'comment-sam',
-            user_id: 'user-sam',
-        };
+describe('AddedComment entities', () => {
+  it('should throw error when payload not contain needed property', () => {
+    // Arrange
+    const payload = {
+      content: 'A comment',
+      owner: 'user-123',
+    };
 
-        expect(() => new AddedComment(payload)).toThrowError(
-            'ADDED_COMMENT.NOT_CONTAIN_NEEDED_PROPERTY'
-        );
-    });
+    // Action & Assert
+    expect(() => new AddedComment(payload)).toThrowError('ADDED_COMMENT.NOT_CONTAIN_NEEDED_PROPERTY');
+  });
 
-    it('should throw error when payload did not meet data type specification', () => {
-        const payload = {
-            id: 'comment-sam',
-            content: 123,
-            user_id: 'user-sam',
-        };
+  it('should throw error when payload does not meet data type requirements', () => {
+    // Arrange
+    const payload = {
+      id: 'comment-123',
+      content: 'A comment',
+      owner: 123,
+    };
 
-        expect(() => new AddedComment(payload)).toThrowError(
-            'ADDED_COMMENT.NOT_MEET_DATA_TYPE_SPECIFICATION'
-        );
-    });
+    // Action & Assert
+    expect(() => new AddedComment(payload)).toThrowError('ADDED_COMMENT.NOT_MEET_DATA_TYPE_SPECIFICATION');
+  });
 
-    it('should create new added comment object correctly', () => {
-        const payload = {
-            id: 'comment-sam',
-            content: 'sebuah comment',
-            user_id: 'user-sam',
-        };
+  it('should create AddedComment entities correctly', () => {
+    // Arrange
+    const payload = {
+      id: 'comment-123',
+      content: 'A comment',
+      owner: 'user-123',
+    };
 
-        const addedComment = new AddedComment(payload);
+    // Action
+    const addedComment = new AddedComment(payload);
 
-        expect(addedComment.id).toEqual(payload.id);
-        expect(addedComment.content).toEqual(payload.content);
-        expect(addedComment.user_id).toEqual(payload.user_id);
-    });
+    // Assert
+    expect(addedComment).toBeInstanceOf(AddedComment);
+    expect(addedComment.id).toEqual(payload.id);
+    expect(addedComment.content).toEqual(payload.content);
+    expect(addedComment.owner).toEqual(payload.owner);
+  });
 });

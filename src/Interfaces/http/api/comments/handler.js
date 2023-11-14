@@ -1,55 +1,34 @@
-const CommentUseCase = require('../../../../Applications/use_case/CommentUseCase');
+const AddCommentUseCase = require('../../../../Applications/use_case/AddCommentUseCase');
+const DeleteCommentUseCase = require('../../../../Applications/use_case/DeleteCommentUseCase');
 
-class CommentHandler {
-    constructor(container) {
-        this._container = container;
+class CommentsHandler {
+  constructor(container) {
+    this._container = container;
+  }
 
-        this.postCommentHandler = this.postCommentHandler.bind(this);
-        this.deleteCommentHandler = this.deleteCommentHandler.bind(this);
-    }
+  async postCommentHandler(request, h) {
+    const { id: userId } = request.auth.credentials;
+    const { threadId } = request.params;
+    const addCommentUseCase = this._container.getInstance(AddCommentUseCase.name);
+    const addedComment = await addCommentUseCase.execute(userId, threadId, request.payload);
 
-    async postCommentHandler(request, h) {
-        const commentUseCase = this._container.getInstance(CommentUseCase.name);
-        const { id: user_id } = request.auth.credentials;
-        const thread_id = request.params.threadId;
-        const useCasePayload = {
-            content: request.payload.content,
-            thread_id,
-            user_id,
-        };
-        const result = await commentUseCase.addComment(useCasePayload);
-        const addedComment = {
-            id: result.id,
-            content: result.content,
-            owner: result.user_id
-        }
+    const response = h.response({
+      status: 'success',
+      data: {
+        addedComment,
+      },
+    });
+    response.code(201);
+    return response;
+  }
 
-        return h
-            .response({
-                status: 'success',
-                data: {
-                    addedComment,
-                },
-            })
-            .code(201);
-    }
+  async deleteCommentByIdHandler(request) {
+    const { id: userId } = request.auth.credentials;
+    const deleteCommentUseCase = this._container.getInstance(DeleteCommentUseCase.name);
+    await deleteCommentUseCase.execute(userId, request.params);
 
-    async deleteCommentHandler(request, h) {
-        const commentUseCase = this._container.getInstance(CommentUseCase.name);
-        const { id: user_id } = request.auth.credentials;
-        const thread_id = request.params.threadId;
-        const comment_id = request.params.id;
-        const useCasePayload = {
-            thread_id,
-            comment_id,
-            user_id,
-        };
-        await commentUseCase.deleteComment(useCasePayload);
-
-        return h.response({
-            status: 'success',
-        });
-    }
+    return { status: 'success' };
+  }
 }
 
-module.exports = CommentHandler;
+module.exports = CommentsHandler;

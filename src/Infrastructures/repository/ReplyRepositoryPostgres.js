@@ -1,92 +1,100 @@
-const AuthorizationError = require('../../Commons/exceptions/AuthorizationError');
 const NotFoundError = require('../../Commons/exceptions/NotFoundError');
-const ReplyRepository = require('../../Domains/replies/ReplyRepository');
+const AuthorizationError = require('../../Commons/exceptions/AuthorizationError');
 const AddedReply = require('../../Domains/replies/entities/AddedReply');
+const ReplyRepository = require('../../Domains/replies/ReplyRepository');
 
 class ReplyRepositoryPostgres extends ReplyRepository {
-    constructor(pool, idGenerator) {
-        super();
-        this._pool = pool;
-        this._idGenerator = idGenerator;
+  constructor(pool, idGenerator) {
+    super();
+    this._pool = pool;
+    this._idGenerator = idGenerator;
+  }
+
+  async checkReplyAvailability(replyId, commentId) {
+    const query = {
+      text: 'SELECT id, is_delete, comment FROM replies WHERE id = $1',
+      values: [replyId],
+    };
+
+    const result = await this._pool.query(query);
+
+    if (!result.rowCount) {
+      throw new NotFoundError('balasan tidak ditemukan');
     }
 
-    async addReply(replyData) {
-        const { thread_id, comment_id, content, user_id } = replyData;
-        const id = `reply-${this._idGenerator()}`;
-        const createdAt = new Date().toISOString();
-        const isDeleted = false;
-
-        const query = {
-            text: 'INSERT INTO replies VALUES($1, $2, $3, $4, $5, $6, $7) RETURNING id, content, user_id',
-            values: [
-                id,
-                content,
-                thread_id,
-                comment_id,
-                user_id,
-                isDeleted,
-                createdAt,
-            ],
-        };
-
-        const result = await this._pool.query(query);
-
-        return new AddedReply(result.rows[0]);
+    if (result.rows[0].is_delete) {
+      throw new NotFoundError('balasan tidak valid');
     }
 
-    async checkAvailabilityReply(replyId) {
-        const query = {
-            text: 'SELECT * FROM replies WHERE id = $1',
-            values: [replyId],
-        };
-
-        const result = await this._pool.query(query);
-
-        if (result.rowCount === 0) {
-            throw new NotFoundError('balasan tidak ditemukan!');
-        }
+    if (result.rows[0].comment !== commentId) {
+      throw new NotFoundError('balasan dalam komentar tidak ditemukan');
     }
+  }
 
-    async verifyReplyOwner(replyId, userId) {
-        const query = {
-            text: 'SELECT * FROM replies WHERE id = $1 AND user_id = $2',
-            values: [replyId, userId],
-        };
+  async verifyReplyOwner(id, owner) {
+    const query = {
+      text: 'SELECT owner FROM replies WHERE id = $1',
+      values: [id],
+    };
 
-        const result = await this._pool.query(query);
+    const result = await this._pool.query(query);
+    const reply = result.rows[0];
 
-        if (result.rowCount === 0) {
-            throw new AuthorizationError(
-                'tidak bisa menghapus balasan orang lain.'
-            );
-        }
+    if (reply.owner !== owner) {
+      throw new AuthorizationError('akses dilarang');
     }
+  }
 
-    async deleteReply(replyId) {
-        const deletedAt = new Date().toISOString();
-        const query = {
-            text: 'UPDATE replies SET is_delete = $2, deleted_at = $3 WHERE id = $1',
-            values: [replyId, true, deletedAt],
-        };
+  async addReply(userId, commentId, newReply) {
+    const { content } = newReply;
+    const id = `reply-${this._idGenerator()}`;
+    const date = new Date().toISOString();
 
-        await this._pool.query(query);
-    }
+    const query = {
+      text: 'INSERT INTO replies VALUES($1, $2, $3, $4, $5) RETURNING id, content, owner',
+      values: [id, content, date, commentId, userId],
+    };
 
-    async getReplies(threadId) {
-        const query = {
-            text: `SELECT replies.id, replies.comment_id, users.username, replies.created_at AS date, replies.content, replies.deleted_at, replies.is_delete FROM replies 
-          LEFT JOIN comments ON comments.id = replies.comment_id
-          LEFT JOIN users ON users.id = replies.user_id 
-          WHERE replies.thread_id = $1 
-          ORDER BY replies.created_at 
-          ASC`,
-            values: [threadId],
-        };
+    const result = await this._pool.query(query);
 
-        const { rows } = await this._pool.query(query);
+    return new AddedReply(result.rows[0]);
+  }
 
-        return rows;
-    }
+  async getRepliesByCommentId(commentId) {
+    const query = {
+      text: 'SELECT replies.id, users.username, replies.date, replies.content, replies.is_delete FROM replies LEFT JOIN users ON users.id = replies.owner WHERE replies.comment = $1 ORDER BY replies.date ASC',
+      values: [commentId],
+    };
+
+    const result = await this._pool.query(query);
+
+    return result.rows;
+  }
+
+  async getRepliesByThreadId(threadId) {
+    const query = {
+      text: `SELECT replies.*, users.username 
+      FROM replies
+      LEFT JOIN users ON users.id = replies.owner
+      LEFT JOIN comments ON comments.id = replies.comment
+      WHERE comments.thread = $1 AND comments.is_delete = false
+      ORDER BY replies.date ASC`,
+      values: [threadId],
+    };
+
+    const result = await this._pool.query(query);
+
+    return result.rows;
+  }
+
+  async deleteReplyById(id) {
+    const query = {
+      text: 'UPDATE replies SET is_delete = true WHERE id = $1',
+      values: [id],
+    };
+
+    await this._pool.query(query);
+  }
 }
 
 module.exports = ReplyRepositoryPostgres;

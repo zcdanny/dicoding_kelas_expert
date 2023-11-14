@@ -1,17 +1,17 @@
-const routes = (handler) => [
-    {
-        method: 'POST',
-        path: '/threads',
-        handler: handler.postThreadHandler,
-        options: {
-            auth: 'forum_api_jwt',
-        },
+const routes = (handler) => ([
+  {
+    method: 'POST',
+    path: '/threads',
+    handler: (request, h) => handler.postThreadHandler(request, h),
+    options: {
+      auth: 'forum_jwt',
     },
-    {
-        method: 'GET',
-        path: '/threads/{id}',
-        handler: handler.getThreadHandler,
-    },
-];
+  },
+  {
+    method: 'GET',
+    path: '/threads/{threadId}',
+    handler: (request) => handler.getThreadByIdHandler(request),
+  },
+]);
 
 module.exports = routes;

@@ -1,24 +1,22 @@
-/* eslint-disable no-unused-vars */
 class UserLogin {
-    constructor(payload) {
-        this._verifyPayload(payload);
-        const { username, password } = payload;
+  constructor(payload) {
+    this._verifyPayload(payload);
 
-        this.username = username;
-        this.password = password;
+    this.username = payload.username;
+    this.password = payload.password;
+  }
+
+  _verifyPayload(payload) {
+    const { username, password } = payload;
+
+    if (!username || !password) {
+      throw new Error('USER_LOGIN.NOT_CONTAIN_NEEDED_PROPERTY');
     }
 
-    _verifyPayload(payload) {
-        const { username, password } = payload;
-
-        if (!username || !password) {
-            throw new Error('USER_LOGIN.NOT_CONTAIN_NEEDED_PROPERTY');
-        }
-
-        if (typeof username !== 'string' || typeof password !== 'string') {
-            throw new Error('USER_LOGIN.NOT_MEET_DATA_TYPE_SPECIFICATION');
-        }
+    if (typeof username !== 'string' || typeof password !== 'string') {
+      throw new Error('USER_LOGIN.NOT_MEET_DATA_TYPE_SPECIFICATION');
     }
+  }
 }
 
 module.exports = UserLogin;

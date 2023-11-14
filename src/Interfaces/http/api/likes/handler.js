@@ -1,28 +1,26 @@
-const LikeUseCase = require('../../../../Applications/use_case/LikeUseCase');
+const LikeOrDislikeCommentUseCase = require('../../../../Applications/use_case/LikeOrDislikeCommentUseCase');
 
-class RepliesHandler {
-    constructor(container) {
-        this._container = container;
+class LikesHandler {
+  constructor(container) {
+    this._container = container;
+  }
 
-        this.putLikeHandler = this.putLikeHandler.bind(this);
-    }
+  async putLikeHandler(request, h) {
+    const { id: userId } = request.auth.credentials;
 
-    async putLikeHandler(request, h) {
-        const { threadId: thread_id, commentId: comment_id } = request.params;
-        const { id: user_id } = request.auth.credentials;
+    const likeOrDislikeCommentUseCase = this._container.getInstance(
+      LikeOrDislikeCommentUseCase.name,
+    );
 
-        const payload = {
-            thread_id,
-            comment_id,
-            user_id,
-        };
-        const likeUseCase = this._container.getInstance(LikeUseCase.name);
-        await likeUseCase.execute(payload);
+    await likeOrDislikeCommentUseCase.execute(userId, request.params);
 
-        return h.response({
-          status: 'success',
-        });
-    }
+    const response = h.response({
+      status: 'success',
+    });
+
+    response.code(200);
+    return response;
+  }
 }
 
-module.exports = RepliesHandler;
+module.exports = LikesHandler;

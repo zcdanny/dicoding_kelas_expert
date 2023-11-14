@@ -1,59 +1,33 @@
-const ReplyUseCase = require('../../../../Applications/use_case/ReplyUseCase');
+const AddReplyUseCase = require('../../../../Applications/use_case/AddReplyUseCase');
+const DeleteReplyUseCase = require('../../../../Applications/use_case/DeleteReplyUseCase');
 
-class ReplyHandler {
-    constructor(container) {
-        this._container = container;
+class RepliesHandler {
+  constructor(container) {
+    this._container = container;
+  }
 
-        this.postReplyHandler = this.postReplyHandler.bind(this);
-        this.deleteReplyHandler = this.deleteReplyHandler.bind(this);
-    }
+  async postReplyHandler(request, h) {
+    const { id: userId } = request.auth.credentials;
+    const addReplyUseCase = this._container.getInstance(AddReplyUseCase.name);
+    const addedReply = await addReplyUseCase.execute(userId, request.params, request.payload);
 
-    async postReplyHandler(request, h) {
-        const replyUseCase = this._container.getInstance(ReplyUseCase.name);
-        const { id: user_id } = request.auth.credentials;
-        const thread_id = request.params.threadId;
-        const comment_id = request.params.commentId;
-        const useCasePayload = {
-            content: request.payload.content,
-            thread_id,
-            comment_id,
-            user_id,
-        };
-        const result = await replyUseCase.addReply(useCasePayload);
-        const addedReply = {
-            id: result.id,
-            content: result.content,
-            owner: result.user_id
-        }
+    const response = h.response({
+      status: 'success',
+      data: {
+        addedReply,
+      },
+    });
+    response.code(201);
+    return response;
+  }
 
-        return h
-            .response({
-                status: 'success',
-                data: {
-                    addedReply,
-                },
-            })
-            .code(201);
-    }
+  async deleteReplyByIdHandler(request) {
+    const { id: userId } = request.auth.credentials;
+    const deleteReplyUseCase = this._container.getInstance(DeleteReplyUseCase.name);
+    await deleteReplyUseCase.execute(userId, request.params);
 
-    async deleteReplyHandler(request, h) {
-        const replyUseCase = this._container.getInstance(ReplyUseCase.name);
-        const { id: user_id } = request.auth.credentials;
-        const thread_id = request.params.threadId;
-        const comment_id = request.params.commentId;
-        const reply_id = request.params.id;
-        const useCasePayload = {
-            thread_id,
-            comment_id,
-            reply_id,
-            user_id,
-        };
-        await replyUseCase.deleteReply(useCasePayload);
-
-        return h.response({
-            status: 'success',
-        });
-    }
+    return { status: 'success' };
+  }
 }
 
-module.exports = ReplyHandler;
+module.exports = RepliesHandler;
